@@ -1,0 +1,64 @@
+name: CI/CD with Security Scanning
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  security:
+    name: Security Scanning and Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Run Trivy for Vulnerability Scanning
+        uses: aquasecurity/trivy-action@v0.7.0
+        with:
+          scan-type: 'fs'
+          severity: 'HIGH,CRITICAL'
+
+      - name: Check Terraform for Security Issues with Terrascan
+        run: |
+          wget -O terrascan https://github.com/accurics/terrascan/releases/latest/download/terrascan-linux-amd64
+          chmod +x terrascan
+          ./terrascan scan
+
+      - name: Check for Terraform Formatting Issues
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        run: terraform validate
+
+  terraform:
+    name: Terraform Plan and Apply
+    needs: security
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        env:
+          API_PRIVATE_KEY: ${{ secrets.API_PRIVATE_KEY }}
+        run: terraform plan -var-file="environments/dev/dev.tfvars" -out=tfplan
+
+      - name: Terraform Apply
+        if: github.event_name == 'push'
+        env:
+          API_PRIVATE_KEY: ${{ secrets.API_PRIVATE_KEY }}
+        run: terraform apply -auto-approve tfplan
