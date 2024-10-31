@@ -1,0 +1,5 @@
+region = "uksouth"
+environment = "qa"
+company = "levvr"
+resource_group_name = "levvr-qa-rg"
+api_private_key = ""
