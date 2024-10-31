@@ -1,0 +1,5 @@
+region = "uksouth"
+environment = "dev"
+company = "levvr"
+resource_group_name = "levvr-dev-rg"
+api_private_key = ""

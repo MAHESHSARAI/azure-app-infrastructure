@@ -1,0 +1,5 @@
+region = "uksouth"
+environment = "prod"
+company = "levvr"
+resource_group_name = "levvr-prod-rg"
+api_private_key = ""
